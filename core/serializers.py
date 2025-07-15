@@ -30,7 +30,7 @@ class RepaymentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-        
+
 # For registering a new user + profile
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
@@ -50,5 +50,5 @@ class RegisterSerializer(serializers.ModelSerializer):
         member_id = validated_data['member_id']
 
         user = User.objects.create_user(username=username, email=email, password=password)
-        MemberProfile.objects.create(user=user, phone=phone, member_id=member_id)
+        MemberProfile.objects.create(user=user, phone=phone, member_id=member_id) # adding phone and id to the user to create a profile
         return user
