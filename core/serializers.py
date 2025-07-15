@@ -33,22 +33,60 @@ class RepaymentSerializer(serializers.ModelSerializer):
 
 # For registering a new user + profile
 class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True)
     phone = serializers.CharField(write_only=True)
-    member_id = serializers.CharField(write_only=True)
+    national_id = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(write_only=True)
+    middle_name = serializers.CharField(write_only=True, allow_blank=True)
+    last_name = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'phone', 'member_id']
+        fields = [
+            'username', 'email', 'password',
+            'first_name', 'middle_name', 'last_name',
+            'phone', 'national_id'
+        ]
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username is already taken.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email is already registered.")
+        return value
+
+    def validate_phone(self, value):
+        if MemberProfile.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("Phone number is already registered.")
+        return value
+
+    def validate_national_id(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("National ID must be numeric.")
+        if MemberProfile.objects.filter(national_id=value).exists():
+            raise serializers.ValidationError("This national ID is already registered.")
+        return value
 
     def create(self, validated_data):
-        username = validated_data['username']
-        email = validated_data['email']
-        password = validated_data['password']
-        phone = validated_data['phone']
-        member_id = validated_data['member_id']
+        phone = validated_data.pop('phone')
+        national_id = validated_data.pop('national_id')
+        middle_name = validated_data.pop('middle_name')
 
-        user = User.objects.create_user(username=username, email=email, password=password)
-        MemberProfile.objects.create(user=user, phone=phone, member_id=member_id) # adding phone and id to the user to create a profile
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+
+        MemberProfile.objects.create(
+            user=user,
+            phone=phone,
+            national_id=national_id,
+            middle_name=middle_name
+        )
         return user
