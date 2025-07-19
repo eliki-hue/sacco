@@ -11,6 +11,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
 from .models import *
 from .serializers import *
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
@@ -70,3 +73,29 @@ class RepaymentViewSet(viewsets.ModelViewSet):
             return Repayment.objects.all()
         profile = MemberProfile.objects.get(user=user)
         return Repayment.objects.filter(loan__member=profile)
+
+
+class CookieTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        data = response.data
+
+        refresh = RefreshToken(data['refresh'])
+        access_token = str(refresh.access_token)
+
+        res = Response({"message": "Login successful"})
+        res.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=True,  # only over HTTPS
+            samesite='Lax'
+        )
+        return res
+    
+
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response({"message": "Logged out"})
+        response.delete_cookie('access_token')
+        return response
