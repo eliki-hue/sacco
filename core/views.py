@@ -75,24 +75,31 @@ class RepaymentViewSet(viewsets.ModelViewSet):
         return Repayment.objects.filter(loan__member=profile)
 
 
-class CookieTokenObtainPairView(TokenObtainPairView):
+class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        data = response.data
+        if response.status_code == 200:
+            access_token = response.data['access']
+            refresh_token = response.data['refresh']
 
-        refresh = RefreshToken(data['refresh'])
-        access_token = str(refresh.access_token)
-
-        res = Response({"message": "Login successful"})
-        res.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=True,  # only over HTTPS
-            samesite='Lax'
-        )
-        return res
-    
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=3600,
+            )
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=7 * 24 * 3600,
+            )
+            response.data = {'detail': 'Login successful'}
+        return response
 
 class LogoutView(APIView):
     def post(self, request):
