@@ -10,7 +10,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterView.as_view(), name='register'),
-    path("login/", LoginView.as_view(), name="login"),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),    path("login/", LoginView.as_view(), name="login"),
     # CSRF endpoint
     path("csrf/", ensure_csrf_cookie(lambda request: JsonResponse({"detail": "CSRF cookie set"}))),
 

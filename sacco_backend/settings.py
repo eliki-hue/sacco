@@ -139,3 +139,17 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+
+
+
+CORS_ALLOWED_ORIGINS = [
+    "*",  # or your frontend domain
+]
+CSRF_TRUSTED_ORIGINS = [
+    "*"
+]
+# CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']  # frontend origin

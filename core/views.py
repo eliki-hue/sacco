@@ -13,6 +13,9 @@ from rest_framework import viewsets
 from django.contrib.auth import authenticate, login
 from .models import *
 from .serializers import *
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
@@ -84,3 +87,36 @@ class RepaymentViewSet(viewsets.ModelViewSet):
             return Repayment.objects.all()
         profile = MemberProfile.objects.get(user=user)
         return Repayment.objects.filter(loan__member=profile)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            access_token = response.data['access']
+            refresh_token = response.data['refresh']
+
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=3600,
+            )
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=7 * 24 * 3600,
+            )
+            response.data = {'detail': 'Login successful'}
+        return response
+
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response({"message": "Logged out"})
+        response.delete_cookie('access_token')
+        return response
